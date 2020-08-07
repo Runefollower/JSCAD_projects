@@ -25,52 +25,7 @@ function flatWing (len, t) {
   return extrudeWing.rotateX(90);
 }
 
-
-function isometricDrill1(target, gridLen, minX, maxX, minY, maxY, gap) {
-  // Will be generating an isometric grid moving along x axis first
-  //   xa,yc   ..   xc,yc
-  //       .       .     .
-  //        .     .       .
-  //         xb,yb   ..   xd,yb
-  //        .     .       .
-  //       .   xa    .     .
-  //   xa,ya   ..   xc,ya
-  var xa, xb, xc, xd;
-  var ya, yb, yc;
-
-  // gridLen - len of one side of equilateral triangle
-  // halfGridLen - half of above, used to calc point positions
-  // xGridStep - increment in x axis for each block of triangles
-  // yGridStep - increment in y axis
-  var halfGridLen = gridLen/2;
-  var gridHeight = halfGridLen * Math.sqrt(3);
-  var xGridStep = gridLen*1.5;
-  var yGridStep = gridHeight*2;
-
-  for (xa = minX; xa < (maxX-xGridStep); xa += xGridStep) {
-    for (ya = minY; ya < (maxY-yGridStep); ya += yGridStep) {
-      xb = xa+halfGridLen;
-      xc = xa+gridLen;
-      xd = xb+gridLen;
-      yb = ya+gridHeight;
-      yc = yb+gridHeight;
-
-      target=difference(target,
-           linear_extrude({hight:1},polygon([
-               [xa,ya],
-               [xc,ya],
-               [xb,yb]])).translate([0, 0, -0.5]));
-
-      target=difference(target,
-            linear_extrude({hight:1},polygon([
-                [xa,yb],
-                [xc,yb],
-                [xb,yc]])).translate([0, 0, -0.5]));
-    }
-  }
-}
-
-function isometricDrill(target, gridLen, minX, maxX, minY, maxY, gap) {
+function isometricGrid(gridLen, minX, maxX, minY, maxY, gap) {
   // Will be generating an isometric grid moving along x axis first
   // x and y points are at the center of each triangle
   //
@@ -96,7 +51,7 @@ function isometricDrill(target, gridLen, minX, maxX, minY, maxY, gap) {
   var yGridStep = gridHeight*2;
 
   var triangleSide = gridLen - gap;
-  var halfTriangleWidth = triangleSide/2
+  var halfTriangleWidth = triangleSide/2;
   var halfTriangleHeight = ((halfTriangleWidth) * Math.sqrt(3))/2;
   triangleA = polygon([
       [-1*halfTriangleWidth,-1*halfTriangleHeight],
@@ -107,7 +62,7 @@ function isometricDrill(target, gridLen, minX, maxX, minY, maxY, gap) {
       [   halfTriangleWidth,   halfTriangleHeight],
       [-1*halfTriangleWidth,   halfTriangleHeight]]);
 
-  drill=null;
+  grid=null;
 
   for (xa = minX; xa < maxX; xa += xGridStep) {
     for (ya = minY; ya < maxY; ya += yGridStep) {
@@ -115,60 +70,52 @@ function isometricDrill(target, gridLen, minX, maxX, minY, maxY, gap) {
       xb = xa+gridLen/2;
       yb = ya+gridHeight;
 
-/*
-      target=difference(target,
-        linear_extrude({hight:1},
-        triangleA.translate([xa, ya, -0.5])));
-      target=difference(target,
-        linear_extrude({hight:1},
-        triangleB.translate([xb, ya, -0.5])));
-
-      target=difference(target,
-        linear_extrude({hight:1},
-        triangleB.translate([xa, yb, -0.5])));
-      target=difference(target,
-        linear_extrude({hight:1},
-        triangleA.translate([xb, yb, -0.5])));
-*/
-
-      if (drill == null) {
-        drill = linear_extrude({hight:1},
+      if (grid === null) {
+        grid = linear_extrude({hight:1},
           triangleA).translate([xa, ya, -0.5])
       } else {
-        drill=union(drill,
+        grid=union(grid,
           linear_extrude({hight:1},
             triangleA).translate([xa, ya, -0.5]));
       }
 
-      drill=union(drill,
+      grid=union(grid,
         linear_extrude({hight:1},
         triangleB).translate([xb, ya, -0.5]));
 
-      drill=union(drill,
+      grid=union(grid,
         linear_extrude({hight:1},
         triangleB).translate([xa, yb, -0.5]));
-      drill=union(drill,
+      grid=union(grid,
         linear_extrude({hight:1},
         triangleA).translate([xb, yb, -0.5]));
     }
   }
 
-  //trim the drill
-  //drill = union(cube({size:[maxX-min]}),drill);
+  //trim the grid
+  trimRegion = cube({size:[maxX-minX,maxY-minY,1]}).translate([minX,minY,-0.5]);
 
-  return difference(target, drill);
-  //return drill;
+  grid = intersection(grid,trimRegion);
+
+  return grid;
 }
 
 
 function main() {
-  hollowWing=difference(flatWing(2,0.15),
-                        scale(.8,flatWing(4,0.10)).translate([0.1, .1, 0]));
+  finalLen = 12;
+  finalWidth = 4;
 
-//  gridWing=difference(hollowWing,
-//           linear_extrude({hight:1},polygon([[0.1,-0.1],[0.1,-0.2],[0.2,-0.15]])).translate([0, 0, -0.5]));
+  hollowWing=difference(flatWing(finalLen/finalWidth,0.15),
+                        scale(.8,flatWing(2*(finalLen/finalWidth),0.10)).translate([0.1, .1, 0]));
+  hollowWing = scale(finalWidth,hollowWing);
 
-  gridWing = isometricDrill(hollowWing, .2, 0.2, .8, -1.8, 0.2, .03);
+  drill = rotate([0,0,-90],isometricGrid(1.1, 0, 11, 0, 3, .2)).translate([0.5,-0.5,0]);
+  gridWing = difference(hollowWing, drill);
+  //gridWing = union(hollowWing, drill);
+
+  gridWing = union(gridWing, cube({size:[1,0.5,.4]}).translate([0.5,-0.5,-0.2]) );
+  gridWing = union(gridWing, cube({size:[1,0.3,.4]}).translate([0.5,-6.15,-0.2]) );
+  gridWing = union(gridWing, cube({size:[1,0.5,.4]}).translate([0.5,-12,-0.2]) );
 
   return scale(10,gridWing);
 }
