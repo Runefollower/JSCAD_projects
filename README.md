@@ -13,16 +13,18 @@ The project is organized as an `npm` workspace:
   - React + Vite local web interface
   - Model browser, parameter controls, preview canvas, and STL export
 
+Legacy source folders now live under `object-builds/`.
+
 ## Project folders
 
-### `ChainLink`
+### `object-builds/ChainLink`
 Early work for designing printable chain and chainmail-style parts.
 
 Current models:
 - `SimpleChainLink.jscad`
 - `SmoothChainLink.jscad`
 
-### `FunkyStuff`
+### `object-builds/FunkyStuff`
 Fun objects and novelty pieces, including cube-based prize or game-style designs.
 
 Current models:
@@ -30,7 +32,7 @@ Current models:
 - `CubeFrame.jscad`
 - `PG_Cube.jscad`
 
-### `TestPlate`
+### `object-builds/TestPlate`
 Simple dimension and fit-check models for 3D printer testing.
 
 Current models:
@@ -38,13 +40,13 @@ Current models:
 - `TestPlateHoles.js`
 - `TestPlateHoles.jscad`
 
-### `Wings`
+### `object-builds/Wings`
 Basic wing and airfoil-related shapes for experimenting with wing geometry.
 
 Current models:
 - `Areofoil.jscad`
 
-### `HouseholdParts`
+### `object-builds/HouseholdParts`
 Small practical household parts and adapters.
 
 Current models:
