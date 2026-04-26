@@ -1,0 +1,14 @@
+{
+  "name": "jscad-projects",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @jscad-projects/web",
+    "build": "npm run build --workspace @jscad-projects/models && npm run build --workspace @jscad-projects/web",
+    "test": "npm run test --workspace @jscad-projects/models && npm run test --workspace @jscad-projects/web"
+  }
+}
+
